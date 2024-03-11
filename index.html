@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Falling Objects Game</title>
+    <link rel="stylesheet" href="gameStyle.css" />
+  </head>
+  <body>
+    <div id="game-container">
+      <div id="play-area">
+        <div
+          id="health-bars"
+          style="position: absolute; right: 10px; top: 5px"
+        >
+          <img src="/assets/heart.png" class="heart" />
+          <img src="/assets/heart.png" class="heart" />
+          <img src="/assets/heart.png" class="heart" />
+          <img src="/assets/heart.png" class="heart" />
+          <img src="/assets/heart.png" class="heart" />
+        </div>
+        <div
+          id="score-container"
+          style="position: absolute; right: 10px; top: 50px; font-family: 'KA1';"
+        >
+          Score <span id="score"> 0</span>
+        </div>
+        <img
+          src="/assets/ezGif.gif"
+          id="player"
+          class="mirror"
+          style="bottom: 10px"
+        />
+      </div>
+      <div id="game-over-form" style="display: none">
+        <form id="player-details-form">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" required />
+          <label for="surname">Surname:</label>
+          <input type="text" id="surname" name="surname" required />
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+
+      <div id="sidebar">
+        <h2>
+          Unlock new feature after <span id="until-next-card"> 10 </span> items
+        </h2>
+      </div>
+    </div>
+    <script src="gameScript.js"></script>
+  </body>
+</html>
