@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastPosition = 0; // Keep track of the last cursor position
   let cardsDisplayed = 0;
   let caughtBurnObjects = 0;
+  let comboCounter = 0;
+  let scoreMultiplier = 1;
   let spawningInterval;
 
   document.addEventListener("mousemove", (e) => {
@@ -168,42 +170,47 @@ document.addEventListener("DOMContentLoaded", () => {
   function spawnObject() {
     const object = document.createElement("img");
     const isBurnObject = Math.random() < 0.1; // 10% chance for a "burn" object
+    object.style.left = Math.random() * (playArea.offsetWidth - 50) + "px";
+
     if (isBurnObject) {
-      object.src = "/assets/sneakyBurn.png"; // Path to your burn image
+      object.src = "/assets/sneakyBurn.png";
       object.classList.add("object", "burn");
     } else {
       const randomImageIndex = Math.floor(Math.random() * objectImages.length);
       object.src = objectImages[randomImageIndex];
       object.classList.add("object");
     }
-    object.style.left = Math.random() * (playArea.offsetWidth - 50) + "px";
+
     playArea.appendChild(object);
 
-    // Adjust fallSpeed based on the score
-    const baseSpeed = 2; // Starting speed
-    const speedIncrement = 0.1; // Speed increase per 10 points
-    let fallSpeed =
-      baseSpeed + Math.floor(score / 10) * speedIncrement + Math.random() * 2; // Adding a little randomness
+    let fallSpeed = calculateFallSpeed(); // Simplified for brevity
 
     function fall() {
-      if (!object.parentElement) return; // Stop if object is already removed
+      if (!object.parentElement) return;
       object.style.top = object.offsetTop + fallSpeed + "px";
 
       if (checkCollision(object, player)) {
-        objectCaught(object, isBurnObject);
+        objectCaught(object, isBurnObject); // Pass isBurnObject correctly
       } else if (object.offsetTop > playArea.offsetHeight) {
+        object.remove();
         if (!isBurnObject) {
-          caughtBurnObjects++;
-          health--;
-          updateHealthDisplay();
+          // Missed non-burn object logic, if needed
         }
-        object.remove(); // Remove the object regardless
       } else {
         requestAnimationFrame(fall);
       }
     }
 
     fall();
+  }
+
+  function calculateFallSpeed() {
+    const baseSpeed = 2; // Base speed of falling objects
+    const speedIncrement = 0.1; // Increment per 10 points scored
+    const randomFactor = Math.random() * 2; // Adding randomness to the fall speed
+
+    // The fall speed increases as the score gets higher but also has a random component
+    return baseSpeed + Math.floor(score / 10) * speedIncrement + randomFactor;
   }
 
   function endGame() {
@@ -214,7 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
       playArea.innerHTML = ""; // Clear the play area
       const endGameMessage = document.createElement("h2");
       endGameMessage.textContent = getEndGameMessage(score);
-      endGameMessage.style.fontFamily = 'KA1';
+      endGameMessage.style.fontFamily = "KA1";
       playArea.appendChild(endGameMessage);
 
       // Try to find the gameOverForm
@@ -243,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
       playArea.appendChild(gameOverForm);
 
       playArea.style.backgroundImage = "url('/assets/background.png')";
-    }, 500);
+    }, 1000);
   }
 
   function checkCollision(obj1, obj2) {
@@ -259,27 +266,77 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function objectCaught(object, isBurnObject) {
     if (!isBurnObject) {
-      // Only increment score if the caught object is not a burn object
-      score++;
+      // Handling for non-burn objects
+      comboCounter++;
+      let pointsAwarded = calculatePoints(1); // Assuming 1 point per object
+      score += pointsAwarded;
       updateScoreDisplay();
-    } else {
-      // If the object is a burn object, increment the burn object counter
-      caughtBurnObjects++;
-      health--;
-      updateHealthDisplay();
-      // Change the play-area's background color as visual feedback
-      playArea.style.backgroundColor = "red";
-      setTimeout(() => {
-        playArea.style.backgroundColor = ""; // Reset the background after 0.5s
-      }, 500);
 
-      // Check if more than 5 burn objects have been caught
-      if (caughtBurnObjects >= 5) {
-        endGame(); // End the game
-        return; // Exit the function to prevent further execution
+      if (comboCounter % 10 === 0 && scoreMultiplier < 3) {
+        scoreMultiplier += 0.5;
+        showComboMultiplierFeedback();
       }
+    } else {
+      // Handling for burn objects
+      console.log("lololo");
+      handleBurnObjectCatch();
     }
-    object.remove(); // Remove the object from the play area
+
+    object.remove(); // Remove object from play area regardless of type
+  }
+
+  function calculatePoints(basePoints) {
+    return basePoints * scoreMultiplier;
+  }
+
+  function resetComboAndMultiplier() {
+    comboCounter = 0;
+    scoreMultiplier = 1;
+    // Consider providing UI feedback here as well
+  }
+
+  function calculatePoints(basePoints) {
+    return basePoints * scoreMultiplier;
+  }
+
+  function handleBurnObjectCatch() {
+    console.log("Burn object caught, handling..."); // Debugging line
+    health--;
+    console.log(`New health: ${health}`); // Debugging line to check health decrement
+    updateHealthDisplay();
+    resetComboAndMultiplier();
+
+    playArea.style.backgroundColor = "red";
+    setTimeout(() => (playArea.style.backgroundColor = ""), 500);
+
+    if (health <= 0) {
+      console.log("Health depleted, ending game..."); // Debugging line
+      endGame();
+    }
+  }
+
+  function showComboMultiplierFeedback() {
+    // Display new multiplier visually, e.g., "Multiplier: x1.5!"
+    const feedbackElement = document.createElement("div");
+    feedbackElement.textContent = `Multiplier: x${scoreMultiplier}!`;
+    feedbackElement.style.position = "absolute";
+    feedbackElement.style.top = "10%";
+    feedbackElement.style.left = "50%";
+    feedbackElement.style.transform = "translateX(-50%)";
+    feedbackElement.style.color = "yellow";
+    feedbackElement.style.fontSize = "20px";
+    feedbackElement.style.zIndex = 1000;
+    feedbackElement.style.fontFamily = "KA1";
+    playArea.appendChild(feedbackElement);
+
+    setTimeout(() => {
+      playArea.removeChild(feedbackElement);
+    }, 2000); // Remove feedback after 2 seconds
+  }
+
+  function updateScore(points) {
+    score += points * scoreMultiplier;
+    updateScoreDisplay(); // Refresh the score display on the UI
   }
 
   function updateScoreDisplay() {
@@ -305,21 +362,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateHealthDisplay() {
     const healthBars = document.getElementById("health-bars");
-    // Clear the current hearts
+    // Ensure existing hearts are cleared before redrawing
     while (healthBars.firstChild) {
       healthBars.removeChild(healthBars.firstChild);
     }
 
-    // Add hearts back according to the current health
+    // Redraw hearts based on current health
     for (let i = 0; i < health; i++) {
       const heartImg = document.createElement("img");
-      heartImg.src = "/assets/heart.png"; // Make sure this path matches your heart image's location
+      heartImg.src = "/assets/heart.png";
       heartImg.classList.add("heart");
       healthBars.appendChild(heartImg);
     }
-
-    // Optionally, you might want to add a condition to handle when health is 0,
-    // such as showing a game over screen or disabling game controls.
   }
 
   function displayCard() {
