@@ -35,3 +35,6 @@
 
 <h2>License</h2>
 <p><a href="https://choosealicense.com/licenses/mit/">MIT</a></p>
+
+<h2>Credits</h2>
+All images in this repository are sourced from Freepik (www.freepik.com) and are credited to their respective authors.
